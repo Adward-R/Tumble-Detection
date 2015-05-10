@@ -34,8 +34,8 @@ public class TestScenes {
         wm.add("扔手机");
 
         //以下场景仅为娱乐，诸君看完，注释之即可。 by DemoHn
-        wm.add("桓神卖萌");
-        wm.add("于老师小讲堂");
+      //  wm.add("桓神卖萌");
+//        wm.add("于老师小讲堂");
     }
 
     public ArrayList<String> getArray(){
