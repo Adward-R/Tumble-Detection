@@ -85,7 +85,7 @@
  	 num = 4;
  	 var inspect; //to get the redrawing function of donut chart
 
- 	 d3.json("lacce.json",function(error,root){
+ 	 d3.json("rotate.json",function(error,root){
 
        stack = d3.layout.stack();
        layers = stack(d3.range(n).map(function(idx) { return dataAdapter(idx, m, .1); }));
