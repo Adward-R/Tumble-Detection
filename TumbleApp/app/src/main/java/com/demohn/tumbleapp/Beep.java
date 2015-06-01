@@ -1,5 +1,6 @@
 package com.demohn.tumbleapp;
 
+import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
@@ -9,8 +10,15 @@ import android.media.AudioTrack;
  */
 public class Beep {
     double[] rec = {};
-    Beep(double[] rec){
+    Context context;
+    Beep(double[] rec,Context ctx) {
         this.rec = rec;
+        this.context = ctx;
+
+        AudioManager audioManager = (AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE);
+        //set max volume
+        int max_vol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,max_vol,AudioManager.FLAG_PLAY_SOUND);
     }
 
     public void play(){
@@ -46,6 +54,7 @@ public class Beep {
             generatedSnd[idx++] = (byte) ((val & 0xff00) >>> 8);
         }
 
+        //set volume
         AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
                 AudioFormat.CHANNEL_OUT_MONO,
                 AudioFormat.ENCODING_PCM_16BIT, generatedSnd.length, AudioTrack.MODE_STATIC);

@@ -7,17 +7,20 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
 
 public class StartActivity extends ActionBarActivity implements View.OnClickListener{
 
     Button EnterDetect;
+    EditText number;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
 
         EnterDetect = (Button) findViewById(R.id.enter_detect);
+        number      = (EditText) findViewById(R.id.editText);
         EnterDetect.setOnClickListener(this);
     }
 
@@ -49,6 +52,7 @@ public class StartActivity extends ActionBarActivity implements View.OnClickList
         switch (v.getId()){
             case R.id.enter_detect:
                 Intent detectIntent = new Intent(this, DetectActivity.class);
+                detectIntent.putExtra("phoneNumber",number.getText());
                 startActivity(detectIntent);
                 break;
             default:

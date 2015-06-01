@@ -27,7 +27,7 @@ public class TumbleService extends Service{
     private SensorManager sensorManager;
     private TumbleBinder myBinder;
 
-    private LibSVM libSVM = new LibSVM();
+    private LibSVM libSVM;
     //sensor variables
     private boolean _start_rec;
     private double[] _data = new double[5];
@@ -41,9 +41,11 @@ public class TumbleService extends Service{
     //intent consts
     static final public String TUMBLE_RESULT = "com.demohn.tumbleapp.TumbleService.dai.hao.shi.ren.yin";
     static final public String TUMBLE_MSG = "com.demohn.tumbleapp.TumbleService.ding.ye.da.tu.hao";
+
     public void onCreate(){
         _start_rec = false;
         myBinder = new TumbleBinder();
+        libSVM = new LibSVM(getApplicationContext());
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         SensorRecorder gravityRecorder, linearRecorder, rotateRecorder;
         // init sensors
@@ -141,15 +143,11 @@ public class TumbleService extends Service{
             // 两次检测的时间间隔
             long timeInterval = currentUpdateTime - lastUpdateTime;
 
-
-
-            long REC_TIME = 100*50;
             // 判断是否达到了检测时间间隔
             if (timeInterval < UPTATE_INTERVAL_TIME)
                 return;
             // 现在的时间变成last时间
             lastUpdateTime = currentUpdateTime;
-
 
             //如果满足触发条件，就开始录制
             if(libSVM.triggerRecording(event) && !_start_rec){
@@ -167,12 +165,13 @@ public class TumbleService extends Service{
                     libSVM.judgeSVM(data,impl);
                 }else{
                     Log.d(TAG,"recording...");
-                    _data[0] = event.sensor.getType(); // sensor type，用int表示
+                    _data[0] = sensor.getType(); // sensor type，用int表示
                     _data[1] = currentUpdateTime - _timestamp;
                     _data[2] = event.values[0];
                     _data[3] = event.values[1];
                     _data[4] = event.values[2];
 
+                    Log.d(TAG,"data:"+_data[0]+" "+_data[1]+" "+_data[2]+" "+_data[3]+" "+_data[4]);
                     data.add(_data);
                 }
             }

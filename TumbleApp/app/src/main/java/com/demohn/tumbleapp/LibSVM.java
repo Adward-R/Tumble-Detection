@@ -1,29 +1,36 @@
 package com.demohn.tumbleapp;
 
+import android.content.Context;
 import android.hardware.SensorEvent;
 import android.os.Handler;
+import android.util.Log;
+
 import libsvm.svm_model;
 import libsvm.svm_node;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 /**
  * Created by Mingchuan on 2015/5/28.
  */
 public class LibSVM implements DetectCondition {
-
-    LibSVM(){
-
+    Context ctx;
+    InputStream stream;
+    LibSVM(Context ctx){
+        this.ctx = ctx;
+        stream = ctx.getResources().openRawResource(R.raw.train);
     }
     @Override
     public boolean triggerRecording(SensorEvent event) {
         // 如果Z方向上的线性加速度值小于-5,则返回true,开始录制
         // LAACE指的就是linear acceleration
         return event.sensor.getType() == DetectCondition.LACCE
-                && event.values[2] < -5;
+                && event.values[2] < -4.7;
     }
 
     /* 设置录制时间。
@@ -61,22 +68,24 @@ public class LibSVM implements DetectCondition {
                 //发送“开始'摔倒判定'的信息到主UI线程上”
                 cb.NotifyTaskOnProcessing();
 
-                /*
-                TODO :wait for completion
-                 */
                 //load pre-included train model
-                File model_file = new File("tumble.model"); //put inside the app
+                InputStream model_stream = stream;
+                //File model_file = new File("tumble.model"); //put inside the app
                 BufferedReader model_reader = null;
                 svm_model svmModel = null;
                 try {
-                    model_reader = new BufferedReader(new FileReader(model_file));
+                    model_reader = new BufferedReader(new InputStreamReader(model_stream));
                     svmModel = libsvm.svm.svm_load_model(model_reader);
                 }
                 catch (Exception e){
+                    e.printStackTrace();
                     //TODO: alert "Model file not found!"
                 }
                 if (svmModel==null){
+                    Log.d("gaga","svmModel null");
                     //TODO: alert "Model file not found!"
+                }else{
+                    Log.d("gaga","svmModel not null");
                 }
                 //build test set
                 svm_node[] svm_nodes = new svm_node[SAMPLING_RATE * 9];
@@ -86,6 +95,7 @@ public class LibSVM implements DetectCondition {
                         && gravity_cnt < SAMPLING_RATE
                         && rotate_cnt < SAMPLING_RATE * 9
                         && sensor_cnt < 40){ //not likely to touch this limit
+
                     if ((int)sensorData.get(sensor_cnt)[0] == DetectCondition.GRAVITY){
                         for (int j=2;j<5;j++){
                             svm_nodes[gravity_cnt] = new svm_node();
@@ -126,8 +136,8 @@ public class LibSVM implements DetectCondition {
                 else {
                     ifTumble = false;
                 }
-
                 // 如果判定为摔倒
+
                 if(ifTumble) {
                     //发送“'真摔倒了'的信息到主UI线程上”
                     cb.NotifyTaskOnJudgeTure();
