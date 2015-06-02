@@ -87,46 +87,57 @@ public class LibSVM implements DetectCondition {
                 }else{
                     Log.d("gaga","svmModel not null");
                 }
+
+                //log
+
                 //build test set
                 svm_node[] svm_nodes = new svm_node[SAMPLING_RATE * 9];
                 int gravity_cnt = 0, lacce_cnt = 90, rotate_cnt = 180;
                 int sensor_cnt = 0;
-                while (lacce_cnt < SAMPLING_RATE * 6
-                        && gravity_cnt < SAMPLING_RATE
-                        && rotate_cnt < SAMPLING_RATE * 9
-                        && sensor_cnt < 40){ //not likely to touch this limit
+                while (sensor_cnt <= sensorData.size()){ //not likely to touch this limit
+
 
                     if ((int)sensorData.get(sensor_cnt)[0] == DetectCondition.GRAVITY){
-                        for (int j=2;j<5;j++){
-                            svm_nodes[gravity_cnt] = new svm_node();
-                            svm_nodes[gravity_cnt].index = gravity_cnt + 1; //_cnt start from 1, yet index of test data from 0
-                            svm_nodes[gravity_cnt].value = sensorData.get(sensor_cnt)[j];
-                            gravity_cnt++;
+                        if(gravity_cnt < 90){
+                            for (int j=2;j<5;j++){
+                                svm_nodes[gravity_cnt] = new svm_node();
+                                svm_nodes[gravity_cnt].index = gravity_cnt + 1; //_cnt start from 1, yet index of test data from 0
+                                svm_nodes[gravity_cnt].value = sensorData.get(sensor_cnt)[j];
+                                gravity_cnt++;
+                            }
                         }
-                        sensor_cnt++;
                     }
                     else if ((int)sensorData.get(sensor_cnt)[0] == DetectCondition.LACCE){
-                        for (int j=2;j<5;j++){
-                            svm_nodes[lacce_cnt] = new svm_node();
-                            svm_nodes[lacce_cnt].index = lacce_cnt + 1;
-                            svm_nodes[lacce_cnt].value = sensorData.get(sensor_cnt)[j];
-                            lacce_cnt++;
+                        if(lacce_cnt < 180){
+                            for (int j=2;j<5;j++){
+                                svm_nodes[lacce_cnt] = new svm_node();
+                                svm_nodes[lacce_cnt].index = lacce_cnt + 1;
+                                svm_nodes[lacce_cnt].value = sensorData.get(sensor_cnt)[j];
+                                lacce_cnt++;
+                            }
                         }
-                        sensor_cnt++;
                     }
-                    else if ((int)sensorData.get(sensor_cnt)[0] == DetectCondition.ROTATE){
-                        for (int j=2;j<5;j++){
-                            svm_nodes[rotate_cnt] = new svm_node();
-                            svm_nodes[rotate_cnt].index = rotate_cnt + 1;
-                            svm_nodes[rotate_cnt].value = sensorData.get(sensor_cnt)[j];
-                            rotate_cnt++;
+                    else if ((int)sensorData.get(sensor_cnt)[0] == DetectCondition.ROTATE) {
+                        if (rotate_cnt < 270){
+                            for (int j = 2; j < 5; j++) {
+                                svm_nodes[rotate_cnt] = new svm_node();
+                                svm_nodes[rotate_cnt].index = rotate_cnt + 1;
+                                svm_nodes[rotate_cnt].value = sensorData.get(sensor_cnt)[j];
+                                rotate_cnt++;
+                            }
                         }
-                        sensor_cnt++;
                     }
                     else {
+                        Log.d("cnt","NOT SENSORED");
                         //TODO: alert "Unknown sensor data type!"
                     }
+                    sensor_cnt += 1;
+
+                    if(gravity_cnt >= 90 && rotate_cnt >= 270 && lacce_cnt >= 180){
+                        break;
+                    }
                 }
+
                 //scale
                 //predict
                 double label = libsvm.svm.svm_predict(svmModel, svm_nodes);

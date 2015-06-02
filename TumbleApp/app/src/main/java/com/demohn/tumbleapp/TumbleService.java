@@ -30,7 +30,9 @@ public class TumbleService extends Service{
     private LibSVM libSVM;
     //sensor variables
     private boolean _start_rec;
-    private double[] _data = new double[5];
+    private ArrayList<double[]> data_gy = new ArrayList<>();
+    private ArrayList<double[]> data_la = new ArrayList<>();
+    private ArrayList<double[]> data_gr = new ArrayList<>();
     private ArrayList<double[]> data = new ArrayList<>();
 
     long _timestamp = 0;
@@ -151,8 +153,11 @@ public class TumbleService extends Service{
 
             //如果满足触发条件，就开始录制
             if(libSVM.triggerRecording(event) && !_start_rec){
-                Log.d(TAG,"start REC");
+                Log.d(TAG, "start REC");
                 //清空原来的数据
+                data_la.clear();
+                data_gr.clear();
+                data_gy.clear();
                 data.clear();
                 _start_rec = true;
                 _timestamp = currentUpdateTime;
@@ -162,8 +167,28 @@ public class TumbleService extends Service{
                 //如果记录时间大于REC_TIME(按照每次获得的时间大约为100ms来计算，录制45*100ms大概可以录下45个点)
                 if(currentUpdateTime - _timestamp > libSVM.setRecordingTime()){
                     _start_rec = false;
+                    /*int _min = Math.min(Math.min(data_la.size(),Math.min(data_gr.size(),data_gy.size())),30);
+                    for(int j=0;j<_min;j++){
+                        data.add(data_la.get(j));
+                    }
+                    for(int j=0;j<_min;j++){
+                        data.add(data_gr.get(j));
+                    }
+                    for(int j=0;j<_min;j++){
+                        data.add(data_gy.get(j));
+                    }*/
+                    for(int j=0;j<data_la.size();j++){
+                        data.add(data_la.get(j));
+                    }
+                    for(int j=0;j<data_gr.size();j++){
+                        data.add(data_gr.get(j));
+                    }
+                    for(int m=0;m<data_gy.size();m++){
+                        data.add(data_gy.get(m));
+                    }
                     libSVM.judgeSVM(data,impl);
                 }else{
+                    double[] _data = new double[5];
                     Log.d(TAG,"recording...");
                     _data[0] = sensor.getType(); // sensor type，用int表示
                     _data[1] = currentUpdateTime - _timestamp;
@@ -171,8 +196,16 @@ public class TumbleService extends Service{
                     _data[3] = event.values[1];
                     _data[4] = event.values[2];
 
-                    Log.d(TAG,"data:"+_data[0]+" "+_data[1]+" "+_data[2]+" "+_data[3]+" "+_data[4]);
-                    data.add(_data);
+                    if(sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                        data_gr.add(_data);
+                        Log.d(TAG, "data_gr:" + _data[0] + " " + _data[1] + " " + _data[2] + " " + _data[3] + " " + _data[4]);
+                    }else if(sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION){
+                        data_la.add(_data);
+                        Log.d(TAG, "data_la:" + _data[0] + " " + _data[1] + " " + _data[2] + " " + _data[3] + " " + _data[4]);
+                    }else if(sensor.getType() == Sensor.TYPE_GRAVITY){
+                        data_gy.add(_data);
+                        Log.d(TAG,"data_gy:"+_data[0]+" "+_data[1]+" "+_data[2]+" "+_data[3]+" "+_data[4]);
+                    }
                 }
             }
         }
