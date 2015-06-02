@@ -167,26 +167,17 @@ public class TumbleService extends Service{
                 //如果记录时间大于REC_TIME(按照每次获得的时间大约为100ms来计算，录制45*100ms大概可以录下45个点)
                 if(currentUpdateTime - _timestamp > libSVM.setRecordingTime()){
                     _start_rec = false;
-                    /*int _min = Math.min(Math.min(data_la.size(),Math.min(data_gr.size(),data_gy.size())),30);
-                    for(int j=0;j<_min;j++){
-                        data.add(data_la.get(j));
-                    }
-                    for(int j=0;j<_min;j++){
-                        data.add(data_gr.get(j));
-                    }
-                    for(int j=0;j<_min;j++){
-                        data.add(data_gy.get(j));
-                    }*/
                     for(int j=0;j<data_la.size();j++){
                         data.add(data_la.get(j));
                     }
                     for(int j=0;j<data_gr.size();j++){
                         data.add(data_gr.get(j));
                     }
-                    for(int m=0;m<data_gy.size();m++){
+                    for (int m=0;m<data_gy.size();m++){
                         data.add(data_gy.get(m));
                     }
                     libSVM.judgeSVM(data,impl);
+
                 }else{
                     double[] _data = new double[5];
                     Log.d(TAG,"recording...");

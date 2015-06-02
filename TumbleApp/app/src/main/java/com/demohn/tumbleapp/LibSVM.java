@@ -21,6 +21,8 @@ import java.util.ArrayList;
 public class LibSVM implements DetectCondition {
     Context ctx;
     InputStream stream;
+
+    svm_node[] svm_nodes;
     LibSVM(Context ctx){
         this.ctx = ctx;
         stream = ctx.getResources().openRawResource(R.raw.train);
@@ -30,7 +32,7 @@ public class LibSVM implements DetectCondition {
         // 如果Z方向上的线性加速度值小于-5,则返回true,开始录制
         // LAACE指的就是linear acceleration
         return event.sensor.getType() == DetectCondition.LACCE
-                && event.values[2] < -4.7;
+                && event.values[2] < -5;
     }
 
     /* 设置录制时间。
@@ -57,7 +59,6 @@ public class LibSVM implements DetectCondition {
     @Override
     public void judgeSVM(final ArrayList<double[]> sensorData,Callback callback) {
         final int SAMPLING_RATE = 30;
-        Handler handler = new Handler();
 
         final Callback cb = callback;
         //new thread
@@ -69,9 +70,9 @@ public class LibSVM implements DetectCondition {
                 cb.NotifyTaskOnProcessing();
 
                 //load pre-included train model
-                InputStream model_stream = stream;
+                InputStream model_stream = ctx.getResources().openRawResource(R.raw.train);
                 //File model_file = new File("tumble.model"); //put inside the app
-                BufferedReader model_reader = null;
+                BufferedReader model_reader;
                 svm_model svmModel = null;
                 try {
                     model_reader = new BufferedReader(new InputStreamReader(model_stream));
@@ -91,11 +92,12 @@ public class LibSVM implements DetectCondition {
                 //log
 
                 //build test set
-                svm_node[] svm_nodes = new svm_node[SAMPLING_RATE * 9];
+                svm_nodes = new svm_node[SAMPLING_RATE * 9];
                 int gravity_cnt = 0, lacce_cnt = 90, rotate_cnt = 180;
                 int sensor_cnt = 0;
                 while (sensor_cnt <= sensorData.size()){ //not likely to touch this limit
 
+                    Log.d("JJJ",sensor_cnt+" "+gravity_cnt+" "+lacce_cnt+" "+sensorData.size());
 
                     if ((int)sensorData.get(sensor_cnt)[0] == DetectCondition.GRAVITY){
                         if(gravity_cnt < 90){
@@ -131,6 +133,7 @@ public class LibSVM implements DetectCondition {
                         Log.d("cnt","NOT SENSORED");
                         //TODO: alert "Unknown sensor data type!"
                     }
+
                     sensor_cnt += 1;
 
                     if(gravity_cnt >= 90 && rotate_cnt >= 270 && lacce_cnt >= 180){
@@ -148,7 +151,6 @@ public class LibSVM implements DetectCondition {
                     ifTumble = false;
                 }
                 // 如果判定为摔倒
-
                 if(ifTumble) {
                     //发送“'真摔倒了'的信息到主UI线程上”
                     cb.NotifyTaskOnJudgeTure();
